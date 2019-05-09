@@ -22,6 +22,7 @@
 package de.appplant.cordova.plugin.notification;
 
 import android.app.AlarmManager;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -29,6 +30,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.service.notification.StatusBarNotification;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.util.ArraySet;
@@ -64,6 +66,10 @@ public final class Notification {
     public enum Type {
         ALL, SCHEDULED, TRIGGERED
     }
+
+    public static final String CHANNEL_ID = "notifications";
+
+    public static final String CHANNEL_NAME = "Notifications";
 
     // Extra key for the id
     public static final String EXTRA_ID = "NOTIFICATION_ID";
@@ -323,8 +329,18 @@ public final class Notification {
             cacheBuilder();
         }
 
+        NotificationManager manager = getNotMgr();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            manager.deleteNotificationChannel(CHANNEL_ID);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+            channel.enableVibration(true);
+            builder.setChannelId(CHANNEL_ID);
+            manager.createNotificationChannel(channel);
+        }
+
         grantPermissionToPlaySoundFromExternal();
-        getNotMgr().notify(getId(), builder.build());
+        manager.notify(getId(), builder.build());
     }
 
     /**
